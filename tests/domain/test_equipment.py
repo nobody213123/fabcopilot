@@ -12,9 +12,14 @@ def test_equipment_can_be_created_with_valid_id() -> None:
     assert equipment.equipment_id == "DF-01"
 
 
-def test_equipment_rejects_empty_id() -> None:
+@pytest.mark.parametrize(
+    "invalid_id",
+    ["", "   "],
+    ids=["empty", "whitespace"],
+)
+def test_equipment_rejects_blank_id(invalid_id: str) -> None:
     with pytest.raises(ValueError):
         Equipment(
-            equipment_id="",
+            equipment_id=invalid_id,
             equipment_type=EquipmentType.DIFFUSION_FURNACE,
         )
