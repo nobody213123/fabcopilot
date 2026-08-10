@@ -10,7 +10,7 @@ FabCopilot 是一个面向芯片制造场景的良率诊断与维护协同智能
 
 ## 当前范围
 
-当前处于第 1 阶段：建立 Python 项目骨架与开发规范。尚未实现 API、数据库、RAG 或 Agent 功能。
+当前已完成 Python 项目骨架、扩散炉设备领域模型、代码质量门禁，以及带自动化测试的 FastAPI 健康检查接口。数据库、RAG 和 Agent 功能尚未实现。
 
 首个业务范围是扩散炉/热处理设备，后续再扩展其他工艺模块。
 
@@ -20,6 +20,7 @@ FabCopilot 是一个面向芯片制造场景的良率诊断与维护协同智能
 fabcopilot/
 ├── src/
 │   └── fabcopilot/
+│       ├── api/          # FastAPI 应用入口与 HTTP 路由
 │       └── domain/       # 与框架无关的核心业务模型与规则
 ├── tests/                # 自动化测试
 ├── .env.example          # 可提交的环境变量示例，不存放真实密钥
@@ -28,7 +29,7 @@ fabcopilot/
 └── README.md             # 项目说明与开发入口
 ```
 
-只提前建立当前阶段需要的目录。API、数据库、RAG、Agent 等目录将在对应能力开始实现时再创建。
+只提前建立当前阶段需要的目录。数据库、RAG、Agent 等目录将在对应能力开始实现时再创建。
 
 ## 本地开发
 
@@ -38,10 +39,13 @@ fabcopilot/
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
+ruff check .
+ruff format --check .
 python -m pytest
+uvicorn fabcopilot.api.app:app --host 127.0.0.1 --port 8000
 ```
 
-目前运行时依赖为空；开发依赖只有测试框架 `pytest`。不要提交 `.env`、虚拟环境或任何真实凭据。
+目前运行时依赖为 FastAPI 与 Uvicorn；开发依赖为 pytest、Ruff 和 HTTPX2。不要提交 `.env`、虚拟环境或任何真实凭据。
 
 ## 迭代原则
 
