@@ -15,3 +15,11 @@ def test_create_equipment() -> None:
         "equipment_id": "DF-01",
         "equipment_type": "diffusion_furnace",
     }
+
+
+def test_equipment_rejects_unknown_equipment_type() -> None:
+    response = client.post(
+        "/equipment",
+        json={"equipment_id": "DF-01", "equipment_type": "etcher"},
+    )
+    assert response.status_code == 422
