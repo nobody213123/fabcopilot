@@ -14,3 +14,6 @@ class Equipment:
     def __post_init__(self) -> None:
         if not self.equipment_id.strip():
             raise ValueError("equipment_id must not be blank")
+
+        if not isinstance(self.equipment_type, EquipmentType):
+            raise TypeError("equipment_type must be an EquipmentType")

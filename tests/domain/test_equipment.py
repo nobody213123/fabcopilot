@@ -23,3 +23,11 @@ def test_equipment_rejects_blank_id(invalid_id: str) -> None:
             equipment_id=invalid_id,
             equipment_type=EquipmentType.DIFFUSION_FURNACE,
         )
+
+
+def test_equipment_rejects_string_equipment_type() -> None:
+    with pytest.raises(TypeError):
+        Equipment(
+            equipment_id="DF-01",
+            equipment_type="diffusion_furnace",
+        )
