@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 
 from fabcopilot import __version__
+from fabcopilot.api.schemas.equipment import EquipmentCreateRequest
+from fabcopilot.domain.equipment import Equipment
 
 app = FastAPI(
     title="FabCopilot",
@@ -11,3 +13,11 @@ app = FastAPI(
 @app.get("/health")
 def health_check() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.post("/equipment", status_code=status.HTTP_201_CREATED)
+def create_equipment(request: EquipmentCreateRequest) -> Equipment:
+    return Equipment(
+        equipment_id=request.equipment_id,
+        equipment_type=request.equipment_type,
+    )
