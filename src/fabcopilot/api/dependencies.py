@@ -14,12 +14,20 @@ from fabcopilot.application.services.knowledge import (
     IndexKnowledgeDocumentService,
     SearchKnowledgeService,
 )
+from fabcopilot.application.services.natural_language_query import (
+    NaturalLanguageQueryService,
+)
 from fabcopilot.config import Settings
 from fabcopilot.infrastructure.database import (
     create_database_engine,
     create_session_factory,
 )
 from fabcopilot.infrastructure.embeddings import HashingEmbeddingProvider
+from fabcopilot.infrastructure.nl2sql import (
+    RuleBasedSqlGenerator,
+    SqlAlchemyReadOnlyQueryExecutor,
+    SqlGlotSafetyValidator,
+)
 from fabcopilot.infrastructure.repositories.sqlalchemy_equipment_repository import (
     SqlAlchemyEquipmentRepository,
 )
@@ -82,3 +90,23 @@ def get_search_knowledge_service(
     repository: Annotated[KnowledgeRepository, Depends(get_knowledge_repository)],
 ) -> SearchKnowledgeService:
     return SearchKnowledgeService(repository, get_embedding_provider())
+
+
+@lru_cache
+def get_sql_generator() -> RuleBasedSqlGenerator:
+    return RuleBasedSqlGenerator()
+
+
+@lru_cache
+def get_sql_validator() -> SqlGlotSafetyValidator:
+    return SqlGlotSafetyValidator()
+
+
+def get_natural_language_query_service(
+    session: Annotated[Session, Depends(get_session)],
+) -> NaturalLanguageQueryService:
+    return NaturalLanguageQueryService(
+        generator=get_sql_generator(),
+        validator=get_sql_validator(),
+        executor=SqlAlchemyReadOnlyQueryExecutor(session),
+    )

@@ -10,8 +10,13 @@ from fabcopilot.api.dependencies import (
     get_engine,
     get_get_equipment_service,
     get_index_knowledge_service,
+    get_natural_language_query_service,
     get_search_knowledge_service,
     get_session_factory,
+)
+from fabcopilot.api.schemas.analytics import (
+    AnalyticsQueryRequest,
+    AnalyticsQueryResponse,
 )
 from fabcopilot.api.schemas.equipment import (
     EquipmentCreateRequest,
@@ -31,6 +36,10 @@ from fabcopilot.application.services.knowledge import (
     IndexKnowledgeDocumentService,
     SearchKnowledgeService,
 )
+from fabcopilot.application.services.natural_language_query import (
+    NaturalLanguageQueryService,
+)
+from fabcopilot.domain.analytics import AnalyticsQueryResult
 from fabcopilot.domain.equipment import Equipment, EquipmentType
 from fabcopilot.domain.knowledge import KnowledgeDocument, KnowledgeSearchResult
 
@@ -141,3 +150,14 @@ def search_knowledge(
         equipment_type=equipment_type,
         limit=limit,
     )
+
+
+@app.post("/analytics/query", response_model=AnalyticsQueryResponse)
+def query_analytics(
+    request: AnalyticsQueryRequest,
+    service: Annotated[
+        NaturalLanguageQueryService,
+        Depends(get_natural_language_query_service),
+    ],
+) -> AnalyticsQueryResult:
+    return service.execute(request.question)

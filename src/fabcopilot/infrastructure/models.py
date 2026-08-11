@@ -1,7 +1,17 @@
 from datetime import datetime
 
 from pgvector.sqlalchemy import VECTOR
-from sqlalchemy import CheckConstraint, Computed, DateTime, Index, String, Text, func
+from sqlalchemy import (
+    CheckConstraint,
+    Computed,
+    DateTime,
+    ForeignKey,
+    Index,
+    Numeric,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -70,3 +80,63 @@ class KnowledgeDocumentRecord(Base):
         DateTime(timezone=True),
         server_default=func.now(),
     )
+
+
+class ProcessRunRecord(Base):
+    __tablename__ = "process_run"
+    __table_args__ = (
+        CheckConstraint(
+            "yield_rate IS NULL OR (yield_rate >= 0 AND yield_rate <= 1)",
+            name="ck_process_run_yield_rate_range",
+        ),
+        CheckConstraint(
+            "ended_at IS NULL OR ended_at > started_at",
+            name="ck_process_run_time_order",
+        ),
+        Index(
+            "ix_process_run_equipment_started_at",
+            "equipment_id",
+            "started_at",
+        ),
+    )
+
+    run_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    equipment_id: Mapped[str] = mapped_column(
+        ForeignKey("equipment.equipment_id", ondelete="RESTRICT"),
+    )
+    lot_id: Mapped[str] = mapped_column(String(64), index=True)
+    recipe: Mapped[str] = mapped_column(String(100))
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    yield_rate: Mapped[float | None] = mapped_column(Numeric(6, 5))
+    status: Mapped[str] = mapped_column(String(20))
+
+
+class AlarmEventRecord(Base):
+    __tablename__ = "alarm_event"
+    __table_args__ = (
+        CheckConstraint(
+            "cleared_at IS NULL OR cleared_at >= occurred_at",
+            name="ck_alarm_event_time_order",
+        ),
+        Index(
+            "ix_alarm_event_equipment_occurred_at",
+            "equipment_id",
+            "occurred_at",
+        ),
+        Index(
+            "ix_alarm_event_code_occurred_at",
+            "alarm_code",
+            "occurred_at",
+        ),
+    )
+
+    event_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    equipment_id: Mapped[str] = mapped_column(
+        ForeignKey("equipment.equipment_id", ondelete="RESTRICT"),
+    )
+    alarm_code: Mapped[str] = mapped_column(String(50))
+    severity: Mapped[str] = mapped_column(String(20))
+    message: Mapped[str] = mapped_column(String(500))
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    cleared_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
