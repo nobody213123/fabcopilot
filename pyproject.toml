@@ -23,6 +23,10 @@ dependencies = [
     "uvicorn>=0.51.0,<0.52.0",
 ]
 
+[project.scripts]
+fabcopilot-eval = "fabcopilot.evaluation.agent_routing:main"
+fabcopilot-seed = "fabcopilot.demo:main"
+
 [project.optional-dependencies]
 dev = [
     "httpx2>=2.10.0,<3.0.0",
