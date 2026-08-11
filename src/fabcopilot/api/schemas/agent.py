@@ -24,12 +24,23 @@ class AgentToolTraceResponse(BaseModel):
     output: dict[str, object]
 
 
+class DiagnosticEvidenceResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    kind: str
+    reference_id: str
+    source: str
+    summary: str
+
+
 class DiagnosticAgentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     answer: str
     tool_trace: tuple[AgentToolTraceResponse, ...]
     pending_approval_ids: tuple[str, ...]
+    evidence: tuple[DiagnosticEvidenceResponse, ...] = ()
+    missing_evidence: tuple[str, ...] = ()
 
 
 class ApprovalDecisionRequest(BaseModel):

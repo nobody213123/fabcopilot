@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "alembic>=1.18.5,<1.19.0",
+    "fastembed>=0.7.0,<0.8.0",
     "fastapi>=0.139.2,<0.140.0",
     "openai>=2.53.0,<2.54.0",
     "pgvector>=0.5.0,<0.6.0",
@@ -25,6 +26,8 @@ dependencies = [
 
 [project.scripts]
 fabcopilot-eval = "fabcopilot.evaluation.agent_routing:main"
+fabcopilot-eval-retrieval = "fabcopilot.evaluation.retrieval:main"
+fabcopilot-eval-sql-safety = "fabcopilot.evaluation.sql_safety:main"
 fabcopilot-seed = "fabcopilot.demo:main"
 
 [project.optional-dependencies]

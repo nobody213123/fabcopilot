@@ -22,3 +22,14 @@ def test_settings_treats_empty_openai_key_as_not_configured(monkeypatch) -> None
     settings = Settings(_env_file=None)
 
     assert settings.openai_api_key is None
+
+
+def test_settings_rejects_unknown_embedding_provider(monkeypatch) -> None:
+    monkeypatch.setenv("FABCOPILOT_EMBEDDING_PROVIDER", "unknown")
+
+    try:
+        Settings(_env_file=None)
+    except ValueError as exc:
+        assert "embedding_provider" in str(exc)
+    else:
+        raise AssertionError("expected invalid embedding provider to be rejected")

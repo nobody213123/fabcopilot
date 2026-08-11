@@ -59,3 +59,24 @@ class RedisJsonCache:
             return bool(self._client.ping())
         except RedisError:
             return False
+
+    def get_version(self, namespace: str) -> int:
+        key = f"version:{namespace}"
+        try:
+            value = self._client.get(key)
+            return int(value) if value is not None else 0
+        except (RedisError, TypeError, ValueError) as exc:
+            CACHE_OPERATIONS.labels("version_get", "error").inc()
+            logger.warning("cache_version_get_failed", error=str(exc))
+            return 0
+
+    def bump_version(self, namespace: str) -> int:
+        key = f"version:{namespace}"
+        try:
+            value = int(self._client.incr(key))
+            CACHE_OPERATIONS.labels("version_bump", "success").inc()
+            return value
+        except (RedisError, TypeError, ValueError) as exc:
+            CACHE_OPERATIONS.labels("version_bump", "error").inc()
+            logger.warning("cache_version_bump_failed", error=str(exc))
+            return 0

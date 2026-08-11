@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import date, datetime
 from decimal import Decimal
 from time import perf_counter
@@ -19,18 +20,20 @@ DEFAULT_ALLOWED_TABLES = frozenset(
         "alarm_event",
     }
 )
-_DENIED_FUNCTIONS = frozenset(
+_ALLOWED_FUNCTIONS = frozenset(
     {
-        "dblink",
-        "dblink_exec",
-        "lo_export",
-        "lo_import",
-        "pg_cancel_backend",
-        "pg_ls_dir",
-        "pg_read_file",
-        "pg_sleep",
-        "pg_terminate_backend",
-        "set_config",
+        "avg",
+        "coalesce",
+        "count",
+        "date_trunc",
+        "lower",
+        "max",
+        "min",
+        "nullif",
+        "round",
+        "sum",
+        "timestamp_trunc",
+        "upper",
     }
 )
 
@@ -94,8 +97,10 @@ class SqlGlotSafetyValidator:
             function_name = function.sql_name().lower()
             if isinstance(function, exp.Anonymous):
                 function_name = function.name.lower()
-            if function_name in _DENIED_FUNCTIONS:
-                raise UnsafeSqlError(f"function '{function_name}' is forbidden")
+            if function_name not in _ALLOWED_FUNCTIONS:
+                raise UnsafeSqlError(
+                    f"function '{function_name}' is not in the analytics allowlist"
+                )
 
     def _enforce_limit(self, expression: exp.Query) -> exp.Query:
         limit = expression.args.get("limit")
@@ -115,10 +120,15 @@ class RuleBasedSqlGenerator:
 
     def generate(self, question: str) -> str:
         normalized = question.casefold()
+        equipment_id = self._extract_equipment_id(question)
+        equipment_filter = (
+            f" WHERE equipment_id = '{equipment_id}'" if equipment_id else ""
+        )
         if "报警" in normalized or "alarm" in normalized:
             return (
                 "SELECT event_id, equipment_id, alarm_code, severity, message, "
-                "occurred_at, cleared_at FROM alarm_event "
+                "occurred_at, cleared_at FROM alarm_event"
+                f"{equipment_filter} "
                 "ORDER BY occurred_at DESC LIMIT 50"
             )
         if ("平均" in normalized or "average" in normalized) and (
@@ -127,19 +137,34 @@ class RuleBasedSqlGenerator:
             return (
                 "SELECT equipment_id, ROUND(AVG(yield_rate), 4) AS average_yield, "
                 "COUNT(*) AS run_count FROM process_run "
-                "WHERE yield_rate IS NOT NULL GROUP BY equipment_id "
+                "WHERE yield_rate IS NOT NULL"
+                f"{' AND equipment_id = ' + repr(equipment_id) if equipment_id else ''} "
+                "GROUP BY equipment_id "
                 "ORDER BY average_yield ASC"
             )
         if "良率" in normalized or "yield" in normalized:
             return (
                 "SELECT run_id, equipment_id, lot_id, recipe, yield_rate, "
-                "started_at FROM process_run WHERE yield_rate IS NOT NULL "
+                "started_at FROM process_run WHERE yield_rate IS NOT NULL"
+                f"{' AND equipment_id = ' + repr(equipment_id) if equipment_id else ''} "
                 "ORDER BY yield_rate ASC, started_at DESC LIMIT 50"
+            )
+        if equipment_id:
+            return (
+                "SELECT run_id, equipment_id, lot_id, recipe, yield_rate, started_at "
+                "FROM process_run "
+                f"WHERE equipment_id = '{equipment_id}' "
+                "ORDER BY started_at DESC LIMIT 20"
             )
         return (
             "SELECT equipment_id, equipment_type FROM equipment "
             "ORDER BY equipment_id LIMIT 50"
         )
+
+    @staticmethod
+    def _extract_equipment_id(question: str) -> str | None:
+        match = re.search(r"\b[A-Za-z]{2,}-[A-Za-z0-9-]+\b", question)
+        return match.group(0).upper() if match else None
 
 
 class SqlAlchemyReadOnlyQueryExecutor:

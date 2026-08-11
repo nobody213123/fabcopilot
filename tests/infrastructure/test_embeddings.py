@@ -1,6 +1,9 @@
 import math
 
-from fabcopilot.infrastructure.embeddings import HashingEmbeddingProvider
+from fabcopilot.infrastructure.embeddings import (
+    FastEmbedEmbeddingProvider,
+    HashingEmbeddingProvider,
+)
 
 
 def test_hashing_embedding_is_deterministic_and_normalized() -> None:
@@ -21,3 +24,12 @@ def test_hashing_embedding_rejects_invalid_dimensions() -> None:
         assert str(exc) == "dimensions must be positive"
     else:
         raise AssertionError("expected invalid dimensions to be rejected")
+
+
+def test_fastembed_provider_rejects_blank_model_name() -> None:
+    try:
+        FastEmbedEmbeddingProvider(model_name=" ")
+    except ValueError as exc:
+        assert str(exc) == "model_name must not be blank"
+    else:
+        raise AssertionError("expected blank model name to be rejected")

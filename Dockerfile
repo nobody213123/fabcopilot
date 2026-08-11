@@ -6,13 +6,20 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-RUN addgroup --system fabcopilot && adduser --system --ingroup fabcopilot fabcopilot
+RUN addgroup --system fabcopilot \
+    && adduser --system --ingroup fabcopilot fabcopilot \
+    && mkdir -p /var/cache/fabcopilot \
+    && chown fabcopilot:fabcopilot /var/cache/fabcopilot
 
 COPY pyproject.toml README.md alembic.ini ./
 COPY src ./src
 COPY migrations ./migrations
 
-RUN python -m pip install --upgrade pip && python -m pip install .
+RUN python -m pip install --prefer-binary .
+
+ENV HOME=/var/cache/fabcopilot \
+    HF_HOME=/var/cache/fabcopilot/huggingface \
+    HF_HUB_DISABLE_XET=1
 
 USER fabcopilot
 

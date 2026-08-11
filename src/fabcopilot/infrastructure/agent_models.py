@@ -92,19 +92,85 @@ class RuleBasedDiagnosticAgentModel:
         approval_pending = any(
             output.output.get("status") == "pending" for output in tool_outputs
         )
-        approval_message = (
-            " A maintenance proposal is pending human approval and was not executed."
-            if approval_pending
-            else ""
+        knowledge_results: list[dict[str, object]] = []
+        analytics_output: dict[str, object] | None = None
+        for output in tool_outputs:
+            raw_results = output.output.get("results")
+            if isinstance(raw_results, list):
+                knowledge_results.extend(
+                    item for item in raw_results if isinstance(item, dict)
+                )
+            if "sql" in output.output:
+                analytics_output = output.output
+
+        uses_chinese = bool(re.search(r"[\u4e00-\u9fff]", prompt))
+        answer = self._compose_evidence_answer(
+            prompt=prompt,
+            knowledge_results=knowledge_results,
+            analytics_output=analytics_output,
+            approval_pending=approval_pending,
+            uses_chinese=uses_chinese,
         )
         return AgentModelResponse(
             response_id=str(uuid4()),
-            text=(
-                f"Completed evidence collection for: {prompt}. Review the tool trace for "
-                f"knowledge sources and guarded SQL results.{approval_message}"
-            ),
+            text=answer,
             tool_calls=(),
         )
+
+    @staticmethod
+    def _compose_evidence_answer(
+        prompt: str,
+        knowledge_results: list[dict[str, object]],
+        analytics_output: dict[str, object] | None,
+        approval_pending: bool,
+        uses_chinese: bool,
+    ) -> str:
+        top = knowledge_results[0] if knowledge_results else None
+        rows = analytics_output.get("rows", []) if analytics_output else []
+        row_count = len(rows) if isinstance(rows, list) else 0
+        if uses_chinese:
+            parts = [f"已完成诊断证据收集：{prompt}。"]
+            if top:
+                parts.append(
+                    f"首要知识证据为《{top.get('title', '未知文档')}》"
+                    f"（来源：{top.get('source', 'unknown')}）："
+                    f"{str(top.get('content', ''))[:240]}"
+                )
+            else:
+                parts.append("未检索到可引用的维护知识，当前不能给出可靠根因。")
+            if analytics_output:
+                parts.append(
+                    f"受限只读查询返回 {row_count} 行数据；SQL 与完整结果保存在工具轨迹中。"
+                )
+            if approval_pending:
+                parts.append("高风险维护提案已进入人工审批，设备操作尚未执行。")
+            else:
+                parts.append("本回答仅提供诊断证据与检查建议，不代表已执行设备操作。")
+            return "".join(parts)
+
+        parts = [f"Evidence was collected for: {prompt}. "]
+        if top:
+            parts.append(
+                f"The leading knowledge source is '{top.get('title', 'unknown')}' "
+                f"({top.get('source', 'unknown')}): "
+                f"{str(top.get('content', ''))[:240]} "
+            )
+        else:
+            parts.append(
+                "No citable maintenance knowledge was retrieved, so a reliable root "
+                "cause cannot yet be stated. "
+            )
+        if analytics_output:
+            parts.append(
+                f"The guarded read-only query returned {row_count} row(s); its SQL and "
+                "full result remain in the tool trace. "
+            )
+        parts.append(
+            "A maintenance proposal is pending human approval and was not executed."
+            if approval_pending
+            else "This diagnosis did not execute any equipment action."
+        )
+        return "".join(parts)
 
 
 class OpenAIResponsesAgentModel:

@@ -19,6 +19,7 @@ from fabcopilot.api.dependencies import (
     get_redis_client,
     get_search_knowledge_service,
     get_session_factory,
+    require_api_key,
 )
 from fabcopilot.api.schemas.agent import (
     ApprovalDecisionRequest,
@@ -126,6 +127,7 @@ def metrics() -> Response:
     "/equipment",
     response_model=EquipmentResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_api_key)],
 )
 def create_equipment(
     request: EquipmentCreateRequest,
@@ -169,6 +171,7 @@ def get_equipment(
     "/knowledge/documents",
     response_model=KnowledgeDocumentResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_api_key)],
 )
 def index_knowledge_document(
     request: KnowledgeDocumentRequest,
@@ -176,6 +179,7 @@ def index_knowledge_document(
         IndexKnowledgeDocumentService,
         Depends(get_index_knowledge_service),
     ],
+    cache: Annotated[RedisJsonCache, Depends(get_json_cache)],
 ) -> KnowledgeDocument:
     document = KnowledgeDocument(
         document_id=request.document_id,
@@ -185,6 +189,7 @@ def index_knowledge_document(
         source=request.source,
     )
     service.execute(document)
+    cache.bump_version("knowledge")
     return document
 
 
@@ -208,7 +213,11 @@ def search_knowledge(
     )
 
 
-@app.post("/analytics/query", response_model=AnalyticsQueryResponse)
+@app.post(
+    "/analytics/query",
+    response_model=AnalyticsQueryResponse,
+    dependencies=[Depends(require_api_key)],
+)
 def query_analytics(
     request: AnalyticsQueryRequest,
     service: Annotated[
@@ -219,7 +228,11 @@ def query_analytics(
     return service.execute(request.question)
 
 
-@app.post("/agent/diagnose", response_model=DiagnosticAgentResponse)
+@app.post(
+    "/agent/diagnose",
+    response_model=DiagnosticAgentResponse,
+    dependencies=[Depends(require_api_key)],
+)
 def diagnose(
     request: DiagnosticAgentRequest,
     service: Annotated[
@@ -244,7 +257,11 @@ def get_approval(
         ) from exc
 
 
-@app.post("/approvals/{approval_id}/decision", response_model=ApprovalResponse)
+@app.post(
+    "/approvals/{approval_id}/decision",
+    response_model=ApprovalResponse,
+    dependencies=[Depends(require_api_key)],
+)
 def decide_approval(
     approval_id: str,
     request: ApprovalDecisionRequest,

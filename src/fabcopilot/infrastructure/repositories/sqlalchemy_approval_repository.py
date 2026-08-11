@@ -1,3 +1,4 @@
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from fabcopilot.application.ports.approval_repository import ApprovalRepository
@@ -46,3 +47,20 @@ class SqlAlchemyApprovalRepository(ApprovalRepository):
             decided_by=record.decided_by,
             decision_note=record.decision_note,
         )
+
+    def save_decision_if_pending(self, request: ApprovalRequest) -> bool:
+        result = self._session.execute(
+            update(ApprovalRequestRecord)
+            .where(
+                ApprovalRequestRecord.approval_id == request.approval_id,
+                ApprovalRequestRecord.status == ApprovalStatus.PENDING.value,
+            )
+            .values(
+                status=request.status.value,
+                decided_at=request.decided_at,
+                decided_by=request.decided_by,
+                decision_note=request.decision_note,
+            )
+        )
+        self._session.flush()
+        return result.rowcount == 1  # type: ignore[attr-defined]

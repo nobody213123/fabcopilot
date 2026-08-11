@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     app_env: str = "development"
     log_level: str = "INFO"
     diagnostic_cache_ttl_seconds: int = 300
+    embedding_provider: str = "hashing"
+    embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    embedding_cache_dir: str | None = None
+    api_key: SecretStr | None = None
     openai_api_key: SecretStr | None = Field(
         default=None,
         validation_alias=AliasChoices(
@@ -23,9 +27,17 @@ class Settings(BaseSettings):
     )
     openai_model: str = "gpt-5.6-terra"
 
-    @field_validator("openai_api_key", mode="before")
+    @field_validator("openai_api_key", "api_key", mode="before")
     @classmethod
-    def empty_openai_key_is_not_configured(cls, value: object) -> object:
+    def empty_secret_is_not_configured(cls, value: object) -> object:
         if isinstance(value, str) and not value.strip():
             return None
         return value
+
+    @field_validator("embedding_provider")
+    @classmethod
+    def supported_embedding_provider(cls, value: str) -> str:
+        normalized = value.strip().casefold()
+        if normalized not in {"hashing", "fastembed"}:
+            raise ValueError("embedding_provider must be 'hashing' or 'fastembed'")
+        return normalized

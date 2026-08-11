@@ -67,5 +67,8 @@ class ApprovalService:
             decided_by=decided_by,
             decision_note=decision_note,
         )
-        self._repository.save(decided)
+        if not self._repository.save_decision_if_pending(decided):
+            raise InvalidApprovalTransitionError(
+                f"approval '{approval_id}' has already been decided"
+            )
         return decided

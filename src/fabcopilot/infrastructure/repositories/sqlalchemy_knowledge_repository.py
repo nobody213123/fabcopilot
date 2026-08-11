@@ -84,13 +84,27 @@ class SqlAlchemyKnowledgeRepository:
         equipment_type: EquipmentType,
         limit: int,
     ) -> Select[tuple[KnowledgeDocumentRecord]]:
+        # pg_trgm works for Chinese text and identifiers without requiring a
+        # language-specific PostgreSQL tokenizer. Keep the TSVECTOR index for
+        # exact token search and use the stronger of both lexical signals.
         ts_query = func.plainto_tsquery("simple", query)
-        rank = func.ts_rank_cd(KnowledgeDocumentRecord.search_vector, ts_query)
+        full_text_rank = func.ts_rank_cd(
+            KnowledgeDocumentRecord.search_vector,
+            ts_query,
+        )
+        trigram_rank = func.greatest(
+            func.similarity(KnowledgeDocumentRecord.title, query),
+            func.similarity(KnowledgeDocumentRecord.content, query),
+        )
+        rank = func.greatest(full_text_rank, trigram_rank)
         return (
             select(KnowledgeDocumentRecord)
             .where(
                 KnowledgeDocumentRecord.equipment_type == equipment_type.value,
-                KnowledgeDocumentRecord.search_vector.op("@@")(ts_query),
+                (
+                    KnowledgeDocumentRecord.search_vector.op("@@")(ts_query)
+                    | (trigram_rank > 0.02)
+                ),
             )
             .order_by(desc(rank), KnowledgeDocumentRecord.document_id)
             .limit(limit)

@@ -59,3 +59,8 @@ def test_agent_tracks_pending_human_approval() -> None:
     assert result.answer == "Proposal created; no equipment action was executed."
     assert result.pending_approval_ids == ("approval-1",)
     assert result.tool_trace[0].name == "propose_maintenance_action"
+    assert result.evidence == ()
+    assert result.missing_evidence == (
+        "No relevant maintenance knowledge was retrieved.",
+        "No matching equipment or process data was returned.",
+    )

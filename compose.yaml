@@ -69,8 +69,14 @@ services:
       FABCOPILOT_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
       FABCOPILOT_OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       FABCOPILOT_OPENAI_MODEL: ${FABCOPILOT_OPENAI_MODEL:-gpt-5.6-terra}
+      FABCOPILOT_EMBEDDING_PROVIDER: ${FABCOPILOT_EMBEDDING_PROVIDER:-hashing}
+      FABCOPILOT_EMBEDDING_MODEL: ${FABCOPILOT_EMBEDDING_MODEL:-sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2}
+      FABCOPILOT_EMBEDDING_CACHE_DIR: /var/cache/fabcopilot/models-v2
+      FABCOPILOT_API_KEY: ${FABCOPILOT_API_KEY:-}
     ports:
       - "${APP_PORT:-8000}:8000"
+    volumes:
+      - fabcopilot_model_cache:/var/cache/fabcopilot
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -88,3 +94,4 @@ services:
 volumes:
   fabcopilot_postgres_data:
   fabcopilot_redis_data:
+  fabcopilot_model_cache:

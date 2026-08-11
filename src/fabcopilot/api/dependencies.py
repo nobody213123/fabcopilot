@@ -1,12 +1,14 @@
 from collections.abc import Iterator
 from functools import lru_cache
+from secrets import compare_digest
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Header, HTTPException, status
 from redis import Redis
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from fabcopilot.application.ports.embedding_provider import EmbeddingProvider
 from fabcopilot.application.ports.equipment_repository import EquipmentRepository
 from fabcopilot.application.ports.knowledge_repository import KnowledgeRepository
 from fabcopilot.application.services.approval import ApprovalService
@@ -34,7 +36,9 @@ from fabcopilot.infrastructure.database import (
     create_database_engine,
     create_session_factory,
 )
-from fabcopilot.infrastructure.embeddings import HashingEmbeddingProvider
+from fabcopilot.infrastructure.embeddings import (
+    create_embedding_provider,
+)
 from fabcopilot.infrastructure.nl2sql import (
     RuleBasedSqlGenerator,
     SqlAlchemyReadOnlyQueryExecutor,
@@ -49,6 +53,22 @@ from fabcopilot.infrastructure.repositories.sqlalchemy_equipment_repository impo
 from fabcopilot.infrastructure.repositories.sqlalchemy_knowledge_repository import (
     SqlAlchemyKnowledgeRepository,
 )
+
+
+def require_api_key(
+    api_key: Annotated[str | None, Header(alias="X-API-Key")] = None,
+) -> None:
+    configured = Settings().api_key
+    if configured is None:
+        return
+    if api_key is None or not compare_digest(
+        api_key,
+        configured.get_secret_value(),
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid API key",
+        )
 
 
 @lru_cache
@@ -95,8 +115,13 @@ def get_get_equipment_service(
 
 
 @lru_cache
-def get_embedding_provider() -> HashingEmbeddingProvider:
-    return HashingEmbeddingProvider()
+def get_embedding_provider() -> EmbeddingProvider:
+    settings = Settings()
+    return create_embedding_provider(
+        settings.embedding_provider,
+        settings.embedding_model,
+        settings.embedding_cache_dir,
+    )
 
 
 def get_knowledge_repository(
@@ -187,4 +212,8 @@ def get_diagnostic_agent_service(
         delegate=service,
         cache=cache,
         ttl_seconds=settings.diagnostic_cache_ttl_seconds,
+        cache_namespace=(
+            f"diagnosis:v2:{settings.openai_model}:"
+            f"{settings.embedding_provider}:{settings.embedding_model}"
+        ),
     )

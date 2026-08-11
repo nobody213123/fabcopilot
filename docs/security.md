@@ -5,14 +5,16 @@
 - `.env`、虚拟环境和日志目录被 Git 忽略；`.env.example` 仅含占位值。
 - OpenAI 密钥由 `SecretStr` 接收，不写入响应或日志。
 - HTTP 日志不记录请求正文，使用请求 ID 关联问题。
+- 可配置 `X-API-Key` 保护写入、诊断、分析和审批接口；未配置时保持本地开发兼容。
 - NL2SQL 使用 AST 白名单、只读事务、行数与执行时间限制。
 - 停机等高风险动作只创建待审批提案，Agent 无直接执行能力。
+- 审批决策使用 `status = pending` 条件原子更新，避免并发批准/拒绝覆盖。
 - Docker 应用以非 root 用户运行。
 - Redis 使用密码；PostgreSQL 与 Redis 的容器密码来自本机环境变量。
 
 ## 当前限制
 
-- 尚未实现用户登录、RBAC、租户隔离、TLS 与密钥管理服务。
+- 共享 API Key 不是企业身份系统；尚未实现用户登录、RBAC、租户隔离、TLS 与密钥管理服务。
 - Compose 为本地开发配置，数据库端口会暴露到 localhost。
 - 离线 hashing embedding 不是生产语义模型。
 - 审批目前只有状态机，没有对接企业 IAM、工单或通知系统。

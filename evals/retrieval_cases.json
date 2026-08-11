@@ -1,0 +1,171 @@
+{
+  "documents": [
+    {
+      "document_id": "EVAL-KB-TEMP-UNIFORMITY",
+      "equipment_type": "diffusion_furnace",
+      "title": "炉温均匀性与热电偶漂移排查",
+      "content": "当晶圆片内均匀性恶化或 Zone 3 温差持续升高时，应检查热电偶校准记录、温区实际值与设定值、加热器输出以及晶舟位置。Thermocouple drift can cause temperature profile deviation even when the recipe setpoint is unchanged.",
+      "source": "synthetic-eval/temperature-uniformity"
+    },
+    {
+      "document_id": "EVAL-KB-O2-FLOW",
+      "equipment_type": "diffusion_furnace",
+      "title": "O2_LOW_FLOW 氧气低流量报警",
+      "content": "出现 O2_LOW_FLOW 时依次核对气源压力、MFC 设定值与实际流量、阀门开度和气路泄漏。氧气质量流量控制器偏移会导致氧化膜厚度异常。",
+      "source": "synthetic-eval/o2-low-flow"
+    },
+    {
+      "document_id": "EVAL-KB-DOOR-SEAL",
+      "equipment_type": "diffusion_furnace",
+      "title": "炉门密封压降与漏气检查",
+      "content": "炉门关闭后的压力衰减可能来自密封圈老化、颗粒附着或密封压力传感器偏移。Door seal leakage should be confirmed with a pressure decay test before replacing parts.",
+      "source": "synthetic-eval/door-seal"
+    },
+    {
+      "document_id": "EVAL-KB-PARTICLE",
+      "equipment_type": "diffusion_furnace",
+      "title": "石英管颗粒污染与清洗周期",
+      "content": "颗粒数升高时检查石英炉管沉积、湿法清洗历史、晶舟搬运和装片过程。Quartz tube deposits and overdue cleaning cycles are common contamination sources.",
+      "source": "synthetic-eval/particle-contamination"
+    },
+    {
+      "document_id": "EVAL-KB-HEATER-POWER",
+      "equipment_type": "diffusion_furnace",
+      "title": "加热器温区功率不平衡",
+      "content": "某温区长期以接近满功率运行而温度仍低于设定值，可能表示加热丝老化、电源模块异常或保温层损坏。Compare heater zone power ratios under the same recipe.",
+      "source": "synthetic-eval/heater-power"
+    },
+    {
+      "document_id": "EVAL-KB-BOAT-POSITION",
+      "equipment_type": "diffusion_furnace",
+      "title": "晶舟位置与装片偏移",
+      "content": "晶舟推进位置偏差或晶圆装载间距不一致会造成局部气流和温度分布变化。检查 boat position encoder、机械限位和 wafer loading spacing。",
+      "source": "synthetic-eval/boat-position"
+    },
+    {
+      "document_id": "EVAL-KB-PRESSURE-SENSOR",
+      "equipment_type": "diffusion_furnace",
+      "title": "腔体压力传感器校准",
+      "content": "压力读数缓慢漂移但真空泵和阀门状态正常时，应使用参考表校验压力传感器零点与量程。A biased pressure transducer can create false chamber pressure alarms.",
+      "source": "synthetic-eval/pressure-sensor"
+    },
+    {
+      "document_id": "EVAL-KB-GAS-LEAK",
+      "equipment_type": "diffusion_furnace",
+      "title": "工艺气路泄漏定位",
+      "content": "气体消耗异常、流量响应变慢或保压失败时，使用分段隔离和氦检漏检查接头、阀门与管路。Gas line leakage must be ruled out before increasing recipe flow.",
+      "source": "synthetic-eval/gas-leak"
+    },
+    {
+      "document_id": "EVAL-KB-RECIPE-DRIFT",
+      "equipment_type": "diffusion_furnace",
+      "title": "配方版本偏差与参数审计",
+      "content": "批次结果突然变化但设备无明显报警时，比较当前 recipe version、审批记录、温度斜率和气体步骤。未经审批不得直接修改生产配方。",
+      "source": "synthetic-eval/recipe-version"
+    },
+    {
+      "document_id": "EVAL-KB-PM-CYCLE",
+      "equipment_type": "diffusion_furnace",
+      "title": "预防性维护周期与运行次数",
+      "content": "根据累计运行批次数、炉管沉积厚度和报警频率安排 preventive maintenance。超过 PM 周期会提高颗粒和温控异常概率。",
+      "source": "synthetic-eval/preventive-maintenance"
+    },
+    {
+      "document_id": "EVAL-KB-COOLING-WATER",
+      "equipment_type": "diffusion_furnace",
+      "title": "冷却水流量与过温联锁",
+      "content": "冷却水流量不足、入口温度过高或过滤器堵塞可能触发 OVER_TEMP interlock。检查 water flow switch、压差和回水温度。",
+      "source": "synthetic-eval/cooling-water"
+    },
+    {
+      "document_id": "EVAL-KB-EXHAUST",
+      "equipment_type": "diffusion_furnace",
+      "title": "排气背压与尾气管堵塞",
+      "content": "尾气管沉积或厂务排风波动会引起 exhaust back pressure 上升，表现为腔体压力控制迟缓和流量偏差。检查排气管、scrubber 和厂务接口。",
+      "source": "synthetic-eval/exhaust-backpressure"
+    },
+    {
+      "document_id": "EVAL-KB-TUBE-CRACK",
+      "equipment_type": "diffusion_furnace",
+      "title": "石英炉管裂纹与完整性检查",
+      "content": "升降温后保压能力突然下降且密封圈正常时，应停用并检查石英管微裂纹。Quartz tube cracks are high-risk and require approved replacement procedures.",
+      "source": "synthetic-eval/quartz-tube-crack"
+    },
+    {
+      "document_id": "EVAL-KB-WAFER-BREAK",
+      "equipment_type": "diffusion_furnace",
+      "title": "晶圆滑片与破片处理",
+      "content": "发现 wafer slip、破片或晶舟卡滞时，不得继续自动装卸。检查机械手对位、晶舟槽位和碎片残留，并通过人工审批安排清理。",
+      "source": "synthetic-eval/wafer-breakage"
+    },
+    {
+      "document_id": "EVAL-KB-YIELD-CORRELATION",
+      "equipment_type": "diffusion_furnace",
+      "title": "报警与批次良率关联分析",
+      "content": "根因分析应将报警时间窗与 lot、recipe、设备和 yield rate 对齐，比较异常前后批次并排除产品差异。单条报警不能直接证明良率损失。",
+      "source": "synthetic-eval/yield-correlation"
+    }
+  ],
+  "queries": [
+    {"case_id":"TEMP-1","query":"炉温均匀性变差怎么查","relevant_document_ids":["EVAL-KB-TEMP-UNIFORMITY"]},
+    {"case_id":"TEMP-2","query":"热电偶漂移导致温区偏差","relevant_document_ids":["EVAL-KB-TEMP-UNIFORMITY"]},
+    {"case_id":"TEMP-3","query":"temperature profile deviation with unchanged setpoint","relevant_document_ids":["EVAL-KB-TEMP-UNIFORMITY"]},
+    {"case_id":"TEMP-4","query":"三号温区片内一致性恶化","relevant_document_ids":["EVAL-KB-TEMP-UNIFORMITY"]},
+    {"case_id":"O2-1","query":"O2_LOW_FLOW 报警排查","relevant_document_ids":["EVAL-KB-O2-FLOW"]},
+    {"case_id":"O2-2","query":"氧气实际流量低于设定值","relevant_document_ids":["EVAL-KB-O2-FLOW"]},
+    {"case_id":"O2-3","query":"mass flow controller drift affects oxide thickness","relevant_document_ids":["EVAL-KB-O2-FLOW"]},
+    {"case_id":"O2-4","query":"氧化膜异常可能是 MFC 吗","relevant_document_ids":["EVAL-KB-O2-FLOW"]},
+    {"case_id":"SEAL-1","query":"炉门关上后掉压很快","relevant_document_ids":["EVAL-KB-DOOR-SEAL"]},
+    {"case_id":"SEAL-2","query":"密封圈老化如何确认","relevant_document_ids":["EVAL-KB-DOOR-SEAL"]},
+    {"case_id":"SEAL-3","query":"door pressure decay test","relevant_document_ids":["EVAL-KB-DOOR-SEAL"]},
+    {"case_id":"SEAL-4","query":"door seal leakage diagnosis","relevant_document_ids":["EVAL-KB-DOOR-SEAL"]},
+    {"case_id":"PARTICLE-1","query":"炉管颗粒突然升高","relevant_document_ids":["EVAL-KB-PARTICLE"]},
+    {"case_id":"PARTICLE-2","query":"石英管沉积和清洗周期","relevant_document_ids":["EVAL-KB-PARTICLE"]},
+    {"case_id":"PARTICLE-3","query":"quartz tube contamination after overdue cleaning","relevant_document_ids":["EVAL-KB-PARTICLE"]},
+    {"case_id":"PARTICLE-4","query":"湿法清洗历史与颗粒缺陷","relevant_document_ids":["EVAL-KB-PARTICLE"]},
+    {"case_id":"HEATER-1","query":"温区一直满功率但升不上去","relevant_document_ids":["EVAL-KB-HEATER-POWER"]},
+    {"case_id":"HEATER-2","query":"加热丝老化有什么现象","relevant_document_ids":["EVAL-KB-HEATER-POWER"]},
+    {"case_id":"HEATER-3","query":"heater zone power imbalance","relevant_document_ids":["EVAL-KB-HEATER-POWER"]},
+    {"case_id":"HEATER-4","query":"同配方下各温区输出比例不同","relevant_document_ids":["EVAL-KB-HEATER-POWER"]},
+    {"case_id":"BOAT-1","query":"晶舟推进位置不准","relevant_document_ids":["EVAL-KB-BOAT-POSITION"]},
+    {"case_id":"BOAT-2","query":"装片间距导致局部不均匀","relevant_document_ids":["EVAL-KB-BOAT-POSITION"]},
+    {"case_id":"BOAT-3","query":"boat position encoder offset","relevant_document_ids":["EVAL-KB-BOAT-POSITION"]},
+    {"case_id":"BOAT-4","query":"wafer loading spacing problem","relevant_document_ids":["EVAL-KB-BOAT-POSITION"]},
+    {"case_id":"PRESSURE-1","query":"腔体压力读数慢慢漂移","relevant_document_ids":["EVAL-KB-PRESSURE-SENSOR"]},
+    {"case_id":"PRESSURE-2","query":"压力传感器零点校准","relevant_document_ids":["EVAL-KB-PRESSURE-SENSOR"]},
+    {"case_id":"PRESSURE-3","query":"false pressure alarm with normal pump","relevant_document_ids":["EVAL-KB-PRESSURE-SENSOR"]},
+    {"case_id":"PRESSURE-4","query":"pressure transducer bias","relevant_document_ids":["EVAL-KB-PRESSURE-SENSOR"]},
+    {"case_id":"LEAK-1","query":"工艺气体消耗异常怎么检漏","relevant_document_ids":["EVAL-KB-GAS-LEAK"]},
+    {"case_id":"LEAK-2","query":"分段隔离氦检漏","relevant_document_ids":["EVAL-KB-GAS-LEAK"]},
+    {"case_id":"LEAK-3","query":"gas line leak before increasing flow","relevant_document_ids":["EVAL-KB-GAS-LEAK"]},
+    {"case_id":"LEAK-4","query":"管路保压失败但阀门正常","relevant_document_ids":["EVAL-KB-GAS-LEAK"]},
+    {"case_id":"RECIPE-1","query":"设备没报警但批次突然变化","relevant_document_ids":["EVAL-KB-RECIPE-DRIFT"]},
+    {"case_id":"RECIPE-2","query":"如何审计配方版本变更","relevant_document_ids":["EVAL-KB-RECIPE-DRIFT"]},
+    {"case_id":"RECIPE-3","query":"recipe version mismatch","relevant_document_ids":["EVAL-KB-RECIPE-DRIFT"]},
+    {"case_id":"RECIPE-4","query":"未经审批修改温度斜率","relevant_document_ids":["EVAL-KB-RECIPE-DRIFT"]},
+    {"case_id":"PM-1","query":"累计批次数超过保养周期","relevant_document_ids":["EVAL-KB-PM-CYCLE"]},
+    {"case_id":"PM-2","query":"什么时候安排预防性维护","relevant_document_ids":["EVAL-KB-PM-CYCLE"]},
+    {"case_id":"PM-3","query":"preventive maintenance based on run count","relevant_document_ids":["EVAL-KB-PM-CYCLE"]},
+    {"case_id":"PM-4","query":"报警变多是否因为 PM 逾期","relevant_document_ids":["EVAL-KB-PM-CYCLE"]},
+    {"case_id":"WATER-1","query":"冷却水不足触发过温联锁","relevant_document_ids":["EVAL-KB-COOLING-WATER"]},
+    {"case_id":"WATER-2","query":"回水温度高和过滤器堵塞","relevant_document_ids":["EVAL-KB-COOLING-WATER"]},
+    {"case_id":"WATER-3","query":"OVER_TEMP water flow switch","relevant_document_ids":["EVAL-KB-COOLING-WATER"]},
+    {"case_id":"WATER-4","query":"cooling water pressure drop","relevant_document_ids":["EVAL-KB-COOLING-WATER"]},
+    {"case_id":"EXHAUST-1","query":"排气背压升高","relevant_document_ids":["EVAL-KB-EXHAUST"]},
+    {"case_id":"EXHAUST-2","query":"尾气管沉积造成压力控制迟缓","relevant_document_ids":["EVAL-KB-EXHAUST"]},
+    {"case_id":"EXHAUST-3","query":"exhaust back pressure and scrubber","relevant_document_ids":["EVAL-KB-EXHAUST"]},
+    {"case_id":"EXHAUST-4","query":"厂务排风波动影响腔体","relevant_document_ids":["EVAL-KB-EXHAUST"]},
+    {"case_id":"CRACK-1","query":"升温后炉管突然保不住压","relevant_document_ids":["EVAL-KB-TUBE-CRACK"]},
+    {"case_id":"CRACK-2","query":"石英管微裂纹检查","relevant_document_ids":["EVAL-KB-TUBE-CRACK"]},
+    {"case_id":"CRACK-3","query":"quartz tube crack after thermal cycle","relevant_document_ids":["EVAL-KB-TUBE-CRACK"]},
+    {"case_id":"CRACK-4","query":"密封正常但保压能力突然下降","relevant_document_ids":["EVAL-KB-TUBE-CRACK"]},
+    {"case_id":"BREAK-1","query":"晶圆滑片后还能继续跑吗","relevant_document_ids":["EVAL-KB-WAFER-BREAK"]},
+    {"case_id":"BREAK-2","query":"破片残留和晶舟卡滞","relevant_document_ids":["EVAL-KB-WAFER-BREAK"]},
+    {"case_id":"BREAK-3","query":"wafer slip during automatic loading","relevant_document_ids":["EVAL-KB-WAFER-BREAK"]},
+    {"case_id":"BREAK-4","query":"机械手对位造成碎片","relevant_document_ids":["EVAL-KB-WAFER-BREAK"]},
+    {"case_id":"YIELD-1","query":"怎样判断报警是否导致良率下降","relevant_document_ids":["EVAL-KB-YIELD-CORRELATION"]},
+    {"case_id":"YIELD-2","query":"对齐报警时间窗和批次","relevant_document_ids":["EVAL-KB-YIELD-CORRELATION"]},
+    {"case_id":"YIELD-3","query":"correlate alarms with lot yield","relevant_document_ids":["EVAL-KB-YIELD-CORRELATION"]},
+    {"case_id":"YIELD-4","query":"单条报警能不能证明良率损失","relevant_document_ids":["EVAL-KB-YIELD-CORRELATION"]}
+  ]
+}

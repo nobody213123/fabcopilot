@@ -1,14 +1,17 @@
 from datetime import UTC, datetime, timedelta
 
+from redis import Redis
+
 from fabcopilot.application.services.knowledge import IndexKnowledgeDocumentService
 from fabcopilot.config import Settings
 from fabcopilot.domain.equipment import EquipmentType
 from fabcopilot.domain.knowledge import KnowledgeDocument
+from fabcopilot.infrastructure.cache import RedisJsonCache
 from fabcopilot.infrastructure.database import (
     create_database_engine,
     create_session_factory,
 )
-from fabcopilot.infrastructure.embeddings import HashingEmbeddingProvider
+from fabcopilot.infrastructure.embeddings import create_embedding_provider
 from fabcopilot.infrastructure.models import (
     AlarmEventRecord,
     EquipmentRecord,
@@ -20,7 +23,8 @@ from fabcopilot.infrastructure.repositories.sqlalchemy_knowledge_repository impo
 
 
 def seed_demo_data() -> dict[str, int]:
-    engine = create_database_engine(Settings().database_url)
+    settings = Settings()
+    engine = create_database_engine(settings.database_url)
     session_factory = create_session_factory(engine)
     reference_time = datetime(2026, 8, 1, 8, tzinfo=UTC)
     equipment_ids = ("DF-01", "DF-02")
@@ -71,7 +75,11 @@ def seed_demo_data() -> dict[str, int]:
 
         knowledge_service = IndexKnowledgeDocumentService(
             SqlAlchemyKnowledgeRepository(session),
-            HashingEmbeddingProvider(),
+            create_embedding_provider(
+                settings.embedding_provider,
+                settings.embedding_model,
+                settings.embedding_cache_dir,
+            ),
         )
         documents = (
             KnowledgeDocument(
@@ -109,6 +117,11 @@ def seed_demo_data() -> dict[str, int]:
             knowledge_service.execute(document)
 
     engine.dispose()
+    redis_client = Redis.from_url(settings.redis_url, decode_responses=True)
+    try:
+        RedisJsonCache(redis_client).bump_version("knowledge")
+    finally:
+        redis_client.close()
     return {"equipment": 2, "process_runs": 6, "alarms": 3, "documents": 3}
 
 

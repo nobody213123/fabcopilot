@@ -19,6 +19,13 @@ class InMemoryApprovalRepository:
     def get_by_id(self, approval_id: str) -> ApprovalRequest | None:
         return self.requests.get(approval_id)
 
+    def save_decision_if_pending(self, request: ApprovalRequest) -> bool:
+        current = self.requests.get(request.approval_id)
+        if current is None or current.status is not ApprovalStatus.PENDING:
+            return False
+        self.requests[request.approval_id] = request
+        return True
+
 
 def test_approval_requires_explicit_human_decision() -> None:
     repository = InMemoryApprovalRepository()

@@ -36,7 +36,17 @@ class AgentToolTrace:
 
 
 @dataclass(frozen=True)
+class DiagnosticEvidence:
+    kind: str
+    reference_id: str
+    source: str
+    summary: str
+
+
+@dataclass(frozen=True)
 class DiagnosticAgentResult:
     answer: str
     tool_trace: tuple[AgentToolTrace, ...]
     pending_approval_ids: tuple[str, ...]
+    evidence: tuple[DiagnosticEvidence, ...] = ()
+    missing_evidence: tuple[str, ...] = ()

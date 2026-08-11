@@ -7,6 +7,7 @@ from fabcopilot.domain.agent import DiagnosticAgentResult
 class FakeCache:
     def __init__(self) -> None:
         self.values: dict[str, dict[str, object]] = {}
+        self.versions: dict[str, int] = {}
 
     def get_json(self, key: str) -> dict[str, object] | None:
         return self.values.get(key)
@@ -21,6 +22,13 @@ class FakeCache:
 
     def ping(self) -> bool:
         return True
+
+    def get_version(self, namespace: str) -> int:
+        return self.versions.get(namespace, 0)
+
+    def bump_version(self, namespace: str) -> int:
+        self.versions[namespace] = self.get_version(namespace) + 1
+        return self.versions[namespace]
 
 
 class StubDiagnosticService:
@@ -54,5 +62,17 @@ def test_pending_approval_is_never_cached() -> None:
 
     service.execute("Stop DF-01")
     service.execute("Stop DF-01")
+
+    assert delegate.calls == 2
+
+
+def test_knowledge_version_change_invalidates_cached_diagnosis() -> None:
+    delegate = StubDiagnosticService()
+    cache = FakeCache()
+    service = CachedDiagnosticAgentService(delegate, cache)
+
+    service.execute("Check DF-01")
+    cache.bump_version("knowledge")
+    service.execute("Check DF-01")
 
     assert delegate.calls == 2
