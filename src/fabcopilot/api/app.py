@@ -1,6 +1,7 @@
 from fastapi import FastAPI, status
 
 from fabcopilot import __version__
+from fabcopilot.api.dependencies import create_equipment_service
 from fabcopilot.api.schemas.equipment import (
     EquipmentCreateRequest,
     EquipmentResponse,
@@ -24,7 +25,7 @@ def health_check() -> dict[str, str]:
     status_code=status.HTTP_201_CREATED,
 )
 def create_equipment(request: EquipmentCreateRequest) -> Equipment:
-    return Equipment(
+    return create_equipment_service.execute(
         equipment_id=request.equipment_id,
         equipment_type=request.equipment_type,
     )
