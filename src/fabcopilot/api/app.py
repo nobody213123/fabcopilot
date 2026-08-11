@@ -6,13 +6,21 @@ from fastapi import Depends, FastAPI, HTTPException, status
 
 from fabcopilot import __version__
 from fabcopilot.api.dependencies import (
+    get_approval_service,
     get_create_equipment_service,
+    get_diagnostic_agent_service,
     get_engine,
     get_get_equipment_service,
     get_index_knowledge_service,
     get_natural_language_query_service,
     get_search_knowledge_service,
     get_session_factory,
+)
+from fabcopilot.api.schemas.agent import (
+    ApprovalDecisionRequest,
+    ApprovalResponse,
+    DiagnosticAgentRequest,
+    DiagnosticAgentResponse,
 )
 from fabcopilot.api.schemas.analytics import (
     AnalyticsQueryRequest,
@@ -29,8 +37,14 @@ from fabcopilot.api.schemas.knowledge import (
     NonBlankString,
     SearchLimit,
 )
-from fabcopilot.application.exceptions import EquipmentAlreadyExistsError
+from fabcopilot.application.exceptions import (
+    ApprovalNotFoundError,
+    EquipmentAlreadyExistsError,
+    InvalidApprovalTransitionError,
+)
+from fabcopilot.application.services.approval import ApprovalService
 from fabcopilot.application.services.create_equipment import CreateEquipmentService
+from fabcopilot.application.services.diagnostic_agent import DiagnosticAgentService
 from fabcopilot.application.services.get_equipment import GetEquipmentService
 from fabcopilot.application.services.knowledge import (
     IndexKnowledgeDocumentService,
@@ -39,7 +53,9 @@ from fabcopilot.application.services.knowledge import (
 from fabcopilot.application.services.natural_language_query import (
     NaturalLanguageQueryService,
 )
+from fabcopilot.domain.agent import DiagnosticAgentResult
 from fabcopilot.domain.analytics import AnalyticsQueryResult
+from fabcopilot.domain.approval import ApprovalRequest
 from fabcopilot.domain.equipment import Equipment, EquipmentType
 from fabcopilot.domain.knowledge import KnowledgeDocument, KnowledgeSearchResult
 
@@ -161,3 +177,53 @@ def query_analytics(
     ],
 ) -> AnalyticsQueryResult:
     return service.execute(request.question)
+
+
+@app.post("/agent/diagnose", response_model=DiagnosticAgentResponse)
+def diagnose(
+    request: DiagnosticAgentRequest,
+    service: Annotated[
+        DiagnosticAgentService,
+        Depends(get_diagnostic_agent_service),
+    ],
+) -> DiagnosticAgentResult:
+    return service.execute(request.prompt)
+
+
+@app.get("/approvals/{approval_id}", response_model=ApprovalResponse)
+def get_approval(
+    approval_id: str,
+    service: Annotated[ApprovalService, Depends(get_approval_service)],
+) -> ApprovalRequest:
+    try:
+        return service.get(approval_id)
+    except ApprovalNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Approval request not found",
+        ) from exc
+
+
+@app.post("/approvals/{approval_id}/decision", response_model=ApprovalResponse)
+def decide_approval(
+    approval_id: str,
+    request: ApprovalDecisionRequest,
+    service: Annotated[ApprovalService, Depends(get_approval_service)],
+) -> ApprovalRequest:
+    try:
+        return service.decide(
+            approval_id=approval_id,
+            decision=request.decision,
+            decided_by=request.decided_by,
+            decision_note=request.decision_note,
+        )
+    except ApprovalNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Approval request not found",
+        ) from exc
+    except InvalidApprovalTransitionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc

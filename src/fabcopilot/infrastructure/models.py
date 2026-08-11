@@ -12,7 +12,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import TSVECTOR
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from fabcopilot.infrastructure.embeddings import EMBEDDING_DIMENSIONS
@@ -140,3 +140,23 @@ class AlarmEventRecord(Base):
     message: Mapped[str] = mapped_column(String(500))
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     cleared_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class ApprovalRequestRecord(Base):
+    __tablename__ = "approval_request"
+    __table_args__ = (
+        Index("ix_approval_request_status_requested_at", "status", "requested_at"),
+    )
+
+    approval_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    equipment_id: Mapped[str] = mapped_column(
+        ForeignKey("equipment.equipment_id", ondelete="RESTRICT"),
+    )
+    action_type: Mapped[str] = mapped_column(String(50))
+    reason: Mapped[str] = mapped_column(String(1000))
+    parameters: Mapped[dict[str, object]] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String(20))
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    decided_by: Mapped[str | None] = mapped_column(String(100))
+    decision_note: Mapped[str | None] = mapped_column(String(1000))
