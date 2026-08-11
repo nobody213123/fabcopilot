@@ -2,7 +2,9 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Response, status
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+from sqlalchemy import Engine, text
 
 from fabcopilot import __version__
 from fabcopilot.api.dependencies import (
@@ -12,7 +14,9 @@ from fabcopilot.api.dependencies import (
     get_engine,
     get_get_equipment_service,
     get_index_knowledge_service,
+    get_json_cache,
     get_natural_language_query_service,
+    get_redis_client,
     get_search_knowledge_service,
     get_session_factory,
 )
@@ -43,8 +47,10 @@ from fabcopilot.application.exceptions import (
     InvalidApprovalTransitionError,
 )
 from fabcopilot.application.services.approval import ApprovalService
+from fabcopilot.application.services.cached_diagnostic_agent import (
+    CachedDiagnosticAgentService,
+)
 from fabcopilot.application.services.create_equipment import CreateEquipmentService
-from fabcopilot.application.services.diagnostic_agent import DiagnosticAgentService
 from fabcopilot.application.services.get_equipment import GetEquipmentService
 from fabcopilot.application.services.knowledge import (
     IndexKnowledgeDocumentService,
@@ -53,17 +59,25 @@ from fabcopilot.application.services.knowledge import (
 from fabcopilot.application.services.natural_language_query import (
     NaturalLanguageQueryService,
 )
+from fabcopilot.config import Settings
 from fabcopilot.domain.agent import DiagnosticAgentResult
 from fabcopilot.domain.analytics import AnalyticsQueryResult
 from fabcopilot.domain.approval import ApprovalRequest
 from fabcopilot.domain.equipment import Equipment, EquipmentType
 from fabcopilot.domain.knowledge import KnowledgeDocument, KnowledgeSearchResult
+from fabcopilot.infrastructure.cache import RedisJsonCache
+from fabcopilot.infrastructure.observability import configure_logging, observe_request
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    configure_logging(Settings().log_level)
     yield
 
+    get_json_cache.cache_clear()
+    if get_redis_client.cache_info().currsize:
+        get_redis_client().close()
+        get_redis_client.cache_clear()
     get_session_factory.cache_clear()
     if get_engine.cache_info().currsize:
         get_engine().dispose()
@@ -75,11 +89,37 @@ app = FastAPI(
     version=__version__,
     lifespan=lifespan,
 )
+app.middleware("http")(observe_request)
 
 
 @app.get("/health")
 def health_check() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/ready")
+def readiness_check(
+    engine: Annotated[Engine, Depends(get_engine)],
+    cache: Annotated[RedisJsonCache, Depends(get_json_cache)],
+) -> dict[str, object]:
+    checks = {"postgres": False, "redis": False}
+    try:
+        with engine.connect() as connection:
+            checks["postgres"] = connection.scalar(text("SELECT 1")) == 1
+    except Exception:
+        pass
+    checks["redis"] = cache.ping()
+    if not all(checks.values()):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"status": "not_ready", "checks": checks},
+        )
+    return {"status": "ready", "checks": checks}
+
+
+@app.get("/metrics", include_in_schema=False)
+def metrics() -> Response:
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 @app.post(
@@ -183,7 +223,7 @@ def query_analytics(
 def diagnose(
     request: DiagnosticAgentRequest,
     service: Annotated[
-        DiagnosticAgentService,
+        CachedDiagnosticAgentService,
         Depends(get_diagnostic_agent_service),
     ],
 ) -> DiagnosticAgentResult:

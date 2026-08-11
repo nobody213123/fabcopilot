@@ -13,10 +13,13 @@ dependencies = [
     "fastapi>=0.139.2,<0.140.0",
     "openai>=2.53.0,<2.54.0",
     "pgvector>=0.5.0,<0.6.0",
+    "prometheus-client>=0.25.0,<0.26.0",
     "psycopg[binary]>=3.3.4,<3.4.0",
     "pydantic-settings>=2.14.2,<2.15.0",
+    "redis>=8.0.1,<8.1.0",
     "sqlalchemy>=2.0.51,<2.1.0",
     "sqlglot>=30.13.0,<30.14.0",
+    "structlog>=26.1.0,<26.2.0",
     "uvicorn>=0.51.0,<0.52.0",
 ]
 

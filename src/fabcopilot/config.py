@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     )
 
     database_url: str
+    redis_url: str
+    app_env: str = "development"
+    log_level: str = "INFO"
+    diagnostic_cache_ttl_seconds: int = 300
     openai_api_key: SecretStr | None = Field(
         default=None,
         validation_alias=AliasChoices(

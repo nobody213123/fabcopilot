@@ -3,12 +3,16 @@ from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends
+from redis import Redis
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from fabcopilot.application.ports.equipment_repository import EquipmentRepository
 from fabcopilot.application.ports.knowledge_repository import KnowledgeRepository
 from fabcopilot.application.services.approval import ApprovalService
+from fabcopilot.application.services.cached_diagnostic_agent import (
+    CachedDiagnosticAgentService,
+)
 from fabcopilot.application.services.create_equipment import CreateEquipmentService
 from fabcopilot.application.services.diagnostic_agent import DiagnosticAgentService
 from fabcopilot.application.services.get_equipment import GetEquipmentService
@@ -25,6 +29,7 @@ from fabcopilot.infrastructure.agent_models import (
     RuleBasedDiagnosticAgentModel,
 )
 from fabcopilot.infrastructure.agent_tools import FabAgentToolRegistry
+from fabcopilot.infrastructure.cache import RedisJsonCache
 from fabcopilot.infrastructure.database import (
     create_database_engine,
     create_session_factory,
@@ -59,6 +64,16 @@ def get_session_factory() -> sessionmaker[Session]:
 def get_session() -> Iterator[Session]:
     with get_session_factory().begin() as session:
         yield session
+
+
+@lru_cache
+def get_redis_client() -> Redis:
+    return Redis.from_url(Settings().redis_url, decode_responses=True)
+
+
+@lru_cache
+def get_json_cache() -> RedisJsonCache:
+    return RedisJsonCache(get_redis_client())
 
 
 def get_equipment_repository(
@@ -164,5 +179,12 @@ def get_agent_tool_registry() -> Iterator[FabAgentToolRegistry]:
 
 def get_diagnostic_agent_service(
     tool_registry: Annotated[FabAgentToolRegistry, Depends(get_agent_tool_registry)],
-) -> DiagnosticAgentService:
-    return DiagnosticAgentService(get_agent_model(), tool_registry)
+    cache: Annotated[RedisJsonCache, Depends(get_json_cache)],
+) -> CachedDiagnosticAgentService:
+    settings = Settings()
+    service = DiagnosticAgentService(get_agent_model(), tool_registry)
+    return CachedDiagnosticAgentService(
+        delegate=service,
+        cache=cache,
+        ttl_seconds=settings.diagnostic_cache_ttl_seconds,
+    )
