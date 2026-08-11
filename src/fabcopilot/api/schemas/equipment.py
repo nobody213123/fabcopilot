@@ -13,3 +13,8 @@ class EquipmentCreateRequest(BaseModel):
         if not value.strip():
             raise ValueError("equipment_id must not be blank")
         return value
+
+
+class EquipmentResponse(BaseModel):
+    equipment_id: str
+    equipment_type: EquipmentType
