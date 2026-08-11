@@ -9,6 +9,7 @@ from fabcopilot.api.schemas.equipment import (
     EquipmentCreateRequest,
     EquipmentResponse,
 )
+from fabcopilot.application.exceptions import EquipmentAlreadyExistsError
 from fabcopilot.domain.equipment import Equipment
 
 app = FastAPI(
@@ -28,10 +29,16 @@ def health_check() -> dict[str, str]:
     status_code=status.HTTP_201_CREATED,
 )
 def create_equipment(request: EquipmentCreateRequest) -> Equipment:
-    return create_equipment_service.execute(
-        equipment_id=request.equipment_id,
-        equipment_type=request.equipment_type,
-    )
+    try:
+        return create_equipment_service.execute(
+            equipment_id=request.equipment_id,
+            equipment_type=request.equipment_type,
+        )
+    except EquipmentAlreadyExistsError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
 
 
 @app.get("/equipment/{equipment_id}", response_model=EquipmentResponse)
