@@ -2,7 +2,10 @@ from unittest.mock import Mock, patch
 
 from sqlalchemy import Engine
 
-from fabcopilot.infrastructure.database import create_database_engine
+from fabcopilot.infrastructure.database import (
+    create_database_engine,
+    create_session_factory,
+)
 
 
 def test_create_database_engine_enables_connection_health_checks() -> None:
@@ -17,3 +20,12 @@ def test_create_database_engine_enables_connection_health_checks() -> None:
 
     assert engine is expected_engine
     create_engine_mock.assert_called_once_with(database_url, pool_pre_ping=True)
+
+
+def test_create_session_factory_keeps_objects_available_after_commit() -> None:
+    engine = Mock(spec=Engine)
+
+    session_factory = create_session_factory(engine)
+
+    assert session_factory.kw["bind"] is engine
+    assert session_factory.kw["expire_on_commit"] is False
