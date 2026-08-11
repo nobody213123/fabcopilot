@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.2-pg17-bookworm
+        env:
+          POSTGRES_DB: fabcopilot
+          POSTGRES_USER: fabcopilot
+          POSTGRES_PASSWORD: ci-database-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fabcopilot -d fabcopilot"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7.2.15-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      FABCOPILOT_DATABASE_URL: postgresql+psycopg://fabcopilot:ci-database-only@localhost:5432/fabcopilot
+      FABCOPILOT_REDIS_URL: redis://localhost:6379/0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install -e ".[dev]"
+      - run: alembic upgrade head
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: python -m pytest -q
+      - run: python -m pytest -m integration -q
+      - run: alembic check
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: fabcopilot:ci

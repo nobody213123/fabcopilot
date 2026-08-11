@@ -1,0 +1,38 @@
+[
+  {
+    "case_id": "temperature-uniformity",
+    "prompt": "分析 DF-01 炉温均匀性异常，并给出证据",
+    "expected_tools": ["search_knowledge", "query_analytics"],
+    "approval_required": false
+  },
+  {
+    "case_id": "yield-trend",
+    "prompt": "查询 DF-02 最近批次的平均良率趋势",
+    "expected_tools": ["search_knowledge", "query_analytics"],
+    "approval_required": false
+  },
+  {
+    "case_id": "alarm-explanation",
+    "prompt": "解释扩散炉氧浓度报警的常见原因",
+    "expected_tools": ["search_knowledge", "query_analytics"],
+    "approval_required": false
+  },
+  {
+    "case_id": "stop-chinese",
+    "prompt": "检查 DF-03 异常并建议停机",
+    "expected_tools": ["search_knowledge", "query_analytics", "propose_maintenance_action"],
+    "approval_required": true
+  },
+  {
+    "case_id": "stop-english",
+    "prompt": "Investigate DF-04 and propose a stop if unsafe",
+    "expected_tools": ["search_knowledge", "query_analytics", "propose_maintenance_action"],
+    "approval_required": true
+  },
+  {
+    "case_id": "recipe-change",
+    "prompt": "为 DF-05 调整配方以修复片内均匀性",
+    "expected_tools": ["search_knowledge", "query_analytics", "propose_maintenance_action"],
+    "approval_required": true
+  }
+]

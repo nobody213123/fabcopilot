@@ -53,7 +53,8 @@ class RuleBasedDiagnosticAgentModel:
             ),
         ]
         if any(
-            keyword in prompt.casefold() for keyword in ("停机", "pause", "调整配方")
+            keyword in prompt.casefold()
+            for keyword in ("停机", "停止", "pause", "stop", "调整配方")
         ):
             equipment_match = re.search(r"\b[A-Za-z]{2,}-[A-Za-z0-9-]+\b", prompt)
             equipment_id = (
