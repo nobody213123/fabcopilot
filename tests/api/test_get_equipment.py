@@ -1,11 +1,7 @@
 from fastapi.testclient import TestClient
 
-from fabcopilot.api.app import app
 
-client = TestClient(app)
-
-
-def test_get_equipment_by_id() -> None:
+def test_get_equipment_by_id(client: TestClient) -> None:
     create_response = client.post(
         "/equipment",
         json={
@@ -24,7 +20,7 @@ def test_get_equipment_by_id() -> None:
     }
 
 
-def test_get_equipment_returns_404_for_unknown_id() -> None:
+def test_get_equipment_returns_404_for_unknown_id(client: TestClient) -> None:
     response = client.get("/equipment/UNKNOWN")
 
     assert response.status_code == 404

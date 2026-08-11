@@ -15,10 +15,10 @@ class SqlAlchemyEquipmentRepository:
             equipment_id=equipment.equipment_id,
             equipment_type=equipment.equipment_type.value,
         )
-        self._session.add(record)
-
         try:
-            self._session.flush()
+            with self._session.begin_nested():
+                self._session.add(record)
+                self._session.flush()
         except IntegrityError as exc:
             if getattr(exc.orig, "sqlstate", None) == "23505":
                 raise EquipmentAlreadyExistsError(equipment.equipment_id) from exc

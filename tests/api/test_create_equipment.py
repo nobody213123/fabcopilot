@@ -1,11 +1,7 @@
 from fastapi.testclient import TestClient
 
-from fabcopilot.api.app import app
 
-client = TestClient(app)
-
-
-def test_create_equipment() -> None:
+def test_create_equipment(client: TestClient) -> None:
     response = client.post(
         "/equipment",
         json={"equipment_id": "DF-01", "equipment_type": "diffusion_furnace"},
@@ -17,7 +13,7 @@ def test_create_equipment() -> None:
     }
 
 
-def test_equipment_rejects_unknown_equipment_type() -> None:
+def test_equipment_rejects_unknown_equipment_type(client: TestClient) -> None:
     response = client.post(
         "/equipment",
         json={"equipment_id": "DF-01", "equipment_type": "etcher"},
@@ -25,7 +21,7 @@ def test_equipment_rejects_unknown_equipment_type() -> None:
     assert response.status_code == 422
 
 
-def test_create_equipment_rejects_blank_equipment_id() -> None:
+def test_create_equipment_rejects_blank_equipment_id(client: TestClient) -> None:
     response = client.post(
         "/equipment",
         json={"equipment_id": "  ", "equipment_type": "diffusion_furnace"},
@@ -33,7 +29,7 @@ def test_create_equipment_rejects_blank_equipment_id() -> None:
     assert response.status_code == 422
 
 
-def test_create_equipment_returns_409_for_duplicate_id() -> None:
+def test_create_equipment_returns_409_for_duplicate_id(client: TestClient) -> None:
     payload = {
         "equipment_id": "DF-DUP-01",
         "equipment_type": "diffusion_furnace",

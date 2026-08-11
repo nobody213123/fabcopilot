@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 from sqlalchemy.orm import Session
 
@@ -10,7 +10,7 @@ from fabcopilot.infrastructure.repositories.sqlalchemy_equipment_repository impo
 
 
 def test_repository_maps_domain_equipment_to_database_record() -> None:
-    session = Mock(spec=Session)
+    session = MagicMock(spec=Session)
     repository = SqlAlchemyEquipmentRepository(session)
     equipment = Equipment("DF-01", EquipmentType.DIFFUSION_FURNACE)
 
