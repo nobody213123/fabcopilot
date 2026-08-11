@@ -9,16 +9,30 @@ from fabcopilot.api.dependencies import (
     get_create_equipment_service,
     get_engine,
     get_get_equipment_service,
+    get_index_knowledge_service,
+    get_search_knowledge_service,
     get_session_factory,
 )
 from fabcopilot.api.schemas.equipment import (
     EquipmentCreateRequest,
     EquipmentResponse,
 )
+from fabcopilot.api.schemas.knowledge import (
+    KnowledgeDocumentRequest,
+    KnowledgeDocumentResponse,
+    KnowledgeSearchResultResponse,
+    NonBlankString,
+    SearchLimit,
+)
 from fabcopilot.application.exceptions import EquipmentAlreadyExistsError
 from fabcopilot.application.services.create_equipment import CreateEquipmentService
 from fabcopilot.application.services.get_equipment import GetEquipmentService
-from fabcopilot.domain.equipment import Equipment
+from fabcopilot.application.services.knowledge import (
+    IndexKnowledgeDocumentService,
+    SearchKnowledgeService,
+)
+from fabcopilot.domain.equipment import Equipment, EquipmentType
+from fabcopilot.domain.knowledge import KnowledgeDocument, KnowledgeSearchResult
 
 
 @asynccontextmanager
@@ -84,3 +98,46 @@ def get_equipment(
         )
 
     return equipment
+
+
+@app.post(
+    "/knowledge/documents",
+    response_model=KnowledgeDocumentResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def index_knowledge_document(
+    request: KnowledgeDocumentRequest,
+    service: Annotated[
+        IndexKnowledgeDocumentService,
+        Depends(get_index_knowledge_service),
+    ],
+) -> KnowledgeDocument:
+    document = KnowledgeDocument(
+        document_id=request.document_id,
+        equipment_type=request.equipment_type,
+        title=request.title,
+        content=request.content,
+        source=request.source,
+    )
+    service.execute(document)
+    return document
+
+
+@app.get(
+    "/knowledge/search",
+    response_model=list[KnowledgeSearchResultResponse],
+)
+def search_knowledge(
+    query: NonBlankString,
+    equipment_type: EquipmentType,
+    service: Annotated[
+        SearchKnowledgeService,
+        Depends(get_search_knowledge_service),
+    ],
+    limit: SearchLimit = 5,
+) -> list[KnowledgeSearchResult]:
+    return service.execute(
+        query=query,
+        equipment_type=equipment_type,
+        limit=limit,
+    )

@@ -7,15 +7,24 @@ from sqlalchemy import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from fabcopilot.application.ports.equipment_repository import EquipmentRepository
+from fabcopilot.application.ports.knowledge_repository import KnowledgeRepository
 from fabcopilot.application.services.create_equipment import CreateEquipmentService
 from fabcopilot.application.services.get_equipment import GetEquipmentService
+from fabcopilot.application.services.knowledge import (
+    IndexKnowledgeDocumentService,
+    SearchKnowledgeService,
+)
 from fabcopilot.config import Settings
 from fabcopilot.infrastructure.database import (
     create_database_engine,
     create_session_factory,
 )
+from fabcopilot.infrastructure.embeddings import HashingEmbeddingProvider
 from fabcopilot.infrastructure.repositories.sqlalchemy_equipment_repository import (
     SqlAlchemyEquipmentRepository,
+)
+from fabcopilot.infrastructure.repositories.sqlalchemy_knowledge_repository import (
+    SqlAlchemyKnowledgeRepository,
 )
 
 
@@ -50,3 +59,26 @@ def get_get_equipment_service(
     repository: Annotated[EquipmentRepository, Depends(get_equipment_repository)],
 ) -> GetEquipmentService:
     return GetEquipmentService(repository)
+
+
+@lru_cache
+def get_embedding_provider() -> HashingEmbeddingProvider:
+    return HashingEmbeddingProvider()
+
+
+def get_knowledge_repository(
+    session: Annotated[Session, Depends(get_session)],
+) -> KnowledgeRepository:
+    return SqlAlchemyKnowledgeRepository(session)
+
+
+def get_index_knowledge_service(
+    repository: Annotated[KnowledgeRepository, Depends(get_knowledge_repository)],
+) -> IndexKnowledgeDocumentService:
+    return IndexKnowledgeDocumentService(repository, get_embedding_provider())
+
+
+def get_search_knowledge_service(
+    repository: Annotated[KnowledgeRepository, Depends(get_knowledge_repository)],
+) -> SearchKnowledgeService:
+    return SearchKnowledgeService(repository, get_embedding_provider())
